@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+<title>PA#1 — WebGL Stereo Camera</title>
+<style>
+    body {
+        background-color: #EEEEEE;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+    }
+
+    #main-container {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+    }
+
+    #canvas-section {
+        flex-shrink: 0;
+    }
+
+    #controls-section {
+        flex: 1;
+        min-width: 350px;
+    }
+
+    .control-group {
+        background-color: #ddd;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .control-group h3 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        color: #333;
+    }
+
+    .control-item {
+        margin-bottom: 15px;
+    }
+
+    .control-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .control-item label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #555;
+    }
+
+    .control-item input[type="range"] {
+        width: 100%;
+    }
+
+    .slider-value {
+        color: #007acc;
+        font-weight: bold;
+    }
+</style>
+
+<!-- Utility Libraries -->
+<script src="./Utils/trackball-rotator.js"></script>
+<script src="./Utils/m4.js"></script>
+
+<!-- Core Modules -->
+<script src="./src/config/surfaceConfig.js"></script>
+<script src="./src/core/SurfaceMath.js"></script>
+<script src="./src/core/TextureManager.js"></script>
+<script src="./src/core/StereoCamera.js"></script>
+<script src="./src/core/Renderer.js"></script>
+
+<!-- Shader Loader -->
+<script src="./src/shaders/ShaderLoader.js"></script>
+
+<!-- Model Classes -->
+<script src="./src/models/BaseModel.js"></script>
+<script src="./src/models/ParametricSurface.js"></script>
+<script src="./src/models/SphereModel.js"></script>
+
+<!-- Main Application -->
+<script src="./src/Application.js"></script>
+
+</head>
+<body onload="init()">
+
+<h2>PA#1 — WebGL Stereo Camera</h2>
+
+<p id="message">Drag on the canvas to rotate the model. Use the controls to adjust stereo camera parameters and model position.</p>
+
+<div id="main-container">
+    <div id="canvas-section">
+        <canvas width="800" height="600" id="webglcanvas" style="background-color:red"></canvas>
+    </div>
+
+    <div class="control-group">
+        <h3>Stereo Camera (PA#1)</h3>
+
+        <div class="control-item">
+            <label for="eyeSeparationSlider">Eye Separation: <span class="slider-value" id="eyeSeparationValue">0.70</span></label>
+            <input type="range" id="eyeSeparationSlider" min="0" max="150" value="70">
+        </div>
+
+        <div class="control-item">
+            <label for="convergenceSlider">Convergence: <span class="slider-value" id="convergenceValue">14</span></label>
+            <input type="range" id="convergenceSlider" min="1" max="30" value="14">
+        </div>
+
+        <div class="control-item">
+            <label for="fovSlider">Field of View (°): <span class="slider-value" id="fovValue">23</span></label>
+            <input type="range" id="fovSlider" min="5" max="90" value="23">
+        </div>
+
+        <div class="control-item">
+            <label for="nearSlider">Near Clipping: <span class="slider-value" id="nearValue">8</span></label>
+            <input type="range" id="nearSlider" min="1" max="15" value="8">
+        </div>
+    </div>
+
+    <div id="controls-section">
+        <div class="control-group">
+            <h3>Model Position</h3>
+
+            <div class="control-item">
+                <label for="modelXSlider">X: <span class="slider-value" id="modelXValue">0.00</span></label>
+                <input type="range" id="modelXSlider" min="-300" max="300" value="0">
+            </div>
+
+            <div class="control-item">
+                <label for="modelYSlider">Y: <span class="slider-value" id="modelYValue">0.00</span></label>
+                <input type="range" id="modelYSlider" min="-300" max="300" value="0">
+            </div>
+
+            <div class="control-item">
+                <label for="modelDepthSlider">Depth: <span class="slider-value" id="modelDepthValue">10</span></label>
+                <input type="range" id="modelDepthSlider" min="8" max="19" value="10">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Mesh Density</h3>
+
+            <div class="control-item">
+                <label for="rStepsSlider">R Steps (Radial): <span class="slider-value" id="rStepsValue">50</span></label>
+                <input type="range" id="rStepsSlider" min="3" max="50" value="50">
+            </div>
+
+            <div class="control-item">
+                <label for="vStepsSlider">V Steps (Angular): <span class="slider-value" id="vStepsValue">100</span></label>
+                <input type="range" id="vStepsSlider" min="3" max="100" value="100">
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+</body></html>

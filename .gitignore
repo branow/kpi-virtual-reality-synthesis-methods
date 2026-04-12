@@ -1,0 +1,12 @@
+*
+!LICENSE
+!README.md
+!index.html
+!.gitignore
+
+!Utils/
+!Utils/**
+!src/
+!src/**
+!textures/
+!textures/**
