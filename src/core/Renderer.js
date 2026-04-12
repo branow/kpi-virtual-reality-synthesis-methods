@@ -251,7 +251,7 @@ class Renderer {
         this.stereoCamera = new StereoCamera(
             0.7,   // eyeSeparation
             14.0,  // convergence
-            1.33,   // aspectRatio
+            1.5,   // aspectRatio
             0.4,   // FOV radians
             8.0,   // nearClippingDistance
             20.0   // farClippingDistance

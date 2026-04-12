@@ -12,6 +12,8 @@ class Application {
         this.renderer = new Renderer(this.gl, this.canvas);
         this.trackball = null;
         this.config = SurfaceConfig;
+        this.sensor = null;
+        this.sensorMatrix = null;
     }
 
     /**
@@ -107,12 +109,9 @@ class Application {
         }
     }
 
-    /**
-     * Draw the scene
-     */
     draw() {
         if (!this.trackball) return;
-        const viewMatrix = this.trackball.getViewMatrix();
+        const viewMatrix = this.sensorMatrix || this.trackball.getViewMatrix();
         if (this.renderer.stereoShaderProg) {
             this.renderer.renderStereo(viewMatrix);
         } else {
@@ -167,6 +166,37 @@ class Application {
             .catch(err => {
                 console.log('Webcam unavailable:', err.name + ': ' + err.message);
             });
+    }
+
+    setupSensor() {
+        this.sensor = new SensorConnection(
+            (matrix) => {
+                this.sensorMatrix = matrix;
+            },
+            (status) => {
+                const el = document.getElementById('sensorStatus');
+                if (el) el.textContent = status;
+            }
+        );
+
+        const connectBtn = document.getElementById('sensorConnectBtn');
+        const hostInput  = document.getElementById('sensorHost');
+        const portInput  = document.getElementById('sensorPort');
+
+        if (connectBtn) {
+            connectBtn.addEventListener('click', () => {
+                if (this.sensor.isConnected()) {
+                    this.sensor.disconnect();
+                    this.sensorMatrix = null;
+                    connectBtn.textContent = 'Connect';
+                } else {
+                    const host = hostInput ? hostInput.value.trim() : '192.168.0.101';
+                    const port = portInput ? parseInt(portInput.value) : 8080;
+                    this.sensor.connect(host, port);
+                    connectBtn.textContent = 'Disconnect';
+                }
+            });
+        }
     }
 
     /**
@@ -258,6 +288,7 @@ class Application {
             this.setupStereoControls();
             this.setupModelPositionControls();
             this.setupWebcam();
+            this.setupSensor();
 
             // Start rendering
             this.startAnimation();

@@ -2,7 +2,8 @@
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 
-<title>PA#1 — WebGL Stereo Camera</title>
+<title>PA#2 — Tangible Interface</title>
+<link rel="icon" href="data:,">
 <style>
     body {
         background-color: #EEEEEE;
@@ -22,8 +23,11 @@
     }
 
     #controls-section {
-        flex: 1;
-        min-width: 350px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        align-content: start;
+        min-width: 500px;
     }
 
     .control-group {
@@ -58,6 +62,23 @@
         width: 100%;
     }
 
+    .control-item input[type="text"],
+    .control-item input[type="number"] {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 4px 6px;
+        border: 1px solid #bbb;
+        border-radius: 3px;
+        font-size: 14px;
+    }
+
+    .control-item button {
+        width: 100%;
+        padding: 6px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
     .slider-value {
         color: #007acc;
         font-weight: bold;
@@ -69,6 +90,7 @@
 <script src="./Utils/m4.js"></script>
 
 <!-- Core Modules -->
+<script src="./src/core/SensorConnection.js"></script>
 <script src="./src/config/surfaceConfig.js"></script>
 <script src="./src/core/SurfaceMath.js"></script>
 <script src="./src/core/TextureManager.js"></script>
@@ -89,40 +111,62 @@
 </head>
 <body onload="init()">
 
-<h2>PA#1 — WebGL Stereo Camera</h2>
+<h2>PA#2 — Tangible Interface</h2>
 
 <p id="message">Drag on the canvas to rotate the model. Use the controls to adjust stereo camera parameters and model position.</p>
 
 <div id="main-container">
     <div id="canvas-section">
-        <canvas width="800" height="600" id="webglcanvas" style="background-color:red"></canvas>
-    </div>
-
-    <div class="control-group">
-        <h3>Stereo Camera (PA#1)</h3>
-
-        <div class="control-item">
-            <label for="eyeSeparationSlider">Eye Separation: <span class="slider-value" id="eyeSeparationValue">0.70</span></label>
-            <input type="range" id="eyeSeparationSlider" min="0" max="150" value="70">
-        </div>
-
-        <div class="control-item">
-            <label for="convergenceSlider">Convergence: <span class="slider-value" id="convergenceValue">14</span></label>
-            <input type="range" id="convergenceSlider" min="1" max="30" value="14">
-        </div>
-
-        <div class="control-item">
-            <label for="fovSlider">Field of View (°): <span class="slider-value" id="fovValue">23</span></label>
-            <input type="range" id="fovSlider" min="5" max="90" value="23">
-        </div>
-
-        <div class="control-item">
-            <label for="nearSlider">Near Clipping: <span class="slider-value" id="nearValue">8</span></label>
-            <input type="range" id="nearSlider" min="1" max="15" value="8">
-        </div>
+        <canvas width="1200" height="800" id="webglcanvas" style="background-color:red"></canvas>
     </div>
 
     <div id="controls-section">
+        <div class="control-group">
+            <h3>Sensor (PA#2)</h3>
+
+            <div class="control-item">
+                <label for="sensorHost">Phone IP</label>
+                <input type="text" id="sensorHost" value="192.168.0.101">
+            </div>
+
+            <div class="control-item">
+                <label for="sensorPort">Port</label>
+                <input type="number" id="sensorPort" value="8080">
+            </div>
+
+            <div class="control-item">
+                <button id="sensorConnectBtn">Connect</button>
+            </div>
+
+            <div class="control-item">
+                Status: <span id="sensorStatus">disconnected</span>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Stereo Camera (PA#1)</h3>
+
+            <div class="control-item">
+                <label for="eyeSeparationSlider">Eye Separation: <span class="slider-value" id="eyeSeparationValue">0.70</span></label>
+                <input type="range" id="eyeSeparationSlider" min="0" max="150" value="70">
+            </div>
+
+            <div class="control-item">
+                <label for="convergenceSlider">Convergence: <span class="slider-value" id="convergenceValue">14</span></label>
+                <input type="range" id="convergenceSlider" min="1" max="30" value="14">
+            </div>
+
+            <div class="control-item">
+                <label for="fovSlider">Field of View (°): <span class="slider-value" id="fovValue">23</span></label>
+                <input type="range" id="fovSlider" min="5" max="90" value="23">
+            </div>
+
+            <div class="control-item">
+                <label for="nearSlider">Near Clipping: <span class="slider-value" id="nearValue">8</span></label>
+                <input type="range" id="nearSlider" min="1" max="15" value="8">
+            </div>
+        </div>
+
         <div class="control-group">
             <h3>Model Position</h3>
 
