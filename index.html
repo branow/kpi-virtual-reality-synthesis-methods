@@ -2,7 +2,7 @@
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 
-<title>PA#2 — Tangible Interface</title>
+<title>CGW — Spatial Audio</title>
 <link rel="icon" href="data:,">
 <style>
     body {
@@ -89,6 +89,9 @@
 <script src="./Utils/trackball-rotator.js"></script>
 <script src="./Utils/m4.js"></script>
 
+<!-- Audio -->
+<script src="./src/audio/AudioManager.js"></script>
+
 <!-- Core Modules -->
 <script src="./src/core/SensorConnection.js"></script>
 <script src="./src/config/surfaceConfig.js"></script>
@@ -111,7 +114,7 @@
 </head>
 <body onload="init()">
 
-<h2>PA#2 — Tangible Interface</h2>
+<h2>CGW — Spatial Audio</h2>
 
 <p id="message">Drag on the canvas to rotate the model. Use the controls to adjust stereo camera parameters and model position.</p>
 
@@ -126,7 +129,7 @@
 
             <div class="control-item">
                 <label for="sensorHost">Phone IP</label>
-                <input type="text" id="sensorHost" value="192.168.0.101">
+                <input type="text" id="sensorHost" value="192.168.0.100">
             </div>
 
             <div class="control-item">
@@ -144,11 +147,31 @@
         </div>
 
         <div class="control-group">
+            <h3>Audio (CGW)</h3>
+            <div class="control-item">
+                <span id="audioFileName" style="font-size:14px; color:#555;"></span>
+            </div>
+            <div class="control-item" style="display:flex; gap:8px;">
+                <button id="audioPlayBtn" style="flex:1">Play</button>
+                <button id="audioRestartBtn" style="flex:1">Restart</button>
+            </div>
+            <div class="control-item">
+                <label>
+                    <input type="checkbox" id="filterEnabled">
+                    High-shelf filter (3 kHz, +12 dB)
+                </label>
+            </div>
+            <div class="control-item">
+                <canvas id="meterCanvas" width="260" height="100" style="display:block; border-radius:4px; width:100%;"></canvas>
+            </div>
+        </div>
+
+        <div class="control-group">
             <h3>Stereo Camera (PA#1)</h3>
 
             <div class="control-item">
-                <label for="eyeSeparationSlider">Eye Separation: <span class="slider-value" id="eyeSeparationValue">0.70</span></label>
-                <input type="range" id="eyeSeparationSlider" min="0" max="150" value="70">
+                <label for="eyeSeparationSlider">Eye Separation: <span class="slider-value" id="eyeSeparationValue">0.25</span></label>
+                <input type="range" id="eyeSeparationSlider" min="0" max="150" value="25">
             </div>
 
             <div class="control-item">

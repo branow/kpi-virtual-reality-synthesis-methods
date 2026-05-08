@@ -46,6 +46,7 @@ class SensorConnection {
             this.ws = null;
         }
         this.rotationMatrix = null;
+        this.onStatusChange('disconnected');
     }
 
     isConnected() {

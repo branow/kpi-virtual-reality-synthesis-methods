@@ -14,6 +14,7 @@ class Application {
         this.config = SurfaceConfig;
         this.sensor = null;
         this.sensorMatrix = null;
+        this.audio = new AudioManager();
     }
 
     /**
@@ -46,6 +47,10 @@ class Application {
         const surface = new ParametricSurface(this.gl, 'surface', this.config);
         surface.generateSurface();
         this.renderer.addModel('surface', surface);
+
+        const sphere = new SphereModel(this.gl, 'sphere');
+        sphere.generate(0.15, 20, 20);
+        this.renderer.addModel('sphere', sphere);
     }
 
     /**
@@ -111,7 +116,19 @@ class Application {
 
     draw() {
         if (!this.trackball) return;
-        const viewMatrix = this.sensorMatrix || this.trackball.getViewMatrix();
+        const target = this.renderer.sphereTarget;
+        if (target) {
+            const alpha = 0.15;
+            const cur = this.renderer.spherePos;
+            this.renderer.spherePos = [
+                cur[0] + alpha * (target[0] - cur[0]),
+                cur[1] + alpha * (target[1] - cur[1]),
+                cur[2] + alpha * (target[2] - cur[2]),
+            ];
+        }
+        this.audio.setPannerPosition(...this.renderer.spherePos);
+        this.drawMeters();
+        const viewMatrix = this.trackball.getViewMatrix();
         if (this.renderer.stereoShaderProg) {
             this.renderer.renderStereo(viewMatrix);
         } else {
@@ -122,6 +139,53 @@ class Application {
     /**
      * Start the animation loop
      */
+    drawMeters() {
+        const canvas = document.getElementById('meterCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width;
+        const h = canvas.height;
+        const rowH = Math.floor(h / 2) - 2;
+
+        ctx.clearRect(0, 0, w, h);
+
+        this._drawWaveform(ctx, this.audio.analyserL, 0,        rowH, w, 'L');
+        this._drawWaveform(ctx, this.audio.analyserR, rowH + 4, rowH, w, 'R');
+    }
+
+    _drawWaveform(ctx, analyser, y, h, w, label) {
+        if (!analyser) return;
+        const data = new Uint8Array(analyser.fftSize);
+        analyser.getByteTimeDomainData(data);
+
+        ctx.clearRect(0, y, w, h);
+
+        const gain = 3;
+        const mid = y + h / 2;
+        const color = '#007acc';
+
+        const points = Array.from(data, (v, i) => ({
+            x: (i / (data.length - 1)) * w,
+            y: mid + ((v - 128) / 128) * gain * h / 2,
+        }));
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length - 1; i++) {
+            const mx = (points[i].x + points[i + 1].x) / 2;
+            const my = (points[i].y + points[i + 1].y) / 2;
+            ctx.quadraticCurveTo(points[i].x, points[i].y, mx, my);
+        }
+        ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+        ctx.stroke();
+
+        ctx.fillStyle = color;
+        ctx.font = '10px Arial';
+        ctx.fillText(label, 4, y + 10);
+    }
+
     startAnimation() {
         this.renderer.startAnimation(() => this.draw());
     }
@@ -169,31 +233,34 @@ class Application {
     }
 
     setupSensor() {
+        const connectBtn = document.getElementById('sensorConnectBtn');
+        const hostInput  = document.getElementById('sensorHost');
+        const portInput  = document.getElementById('sensorPort');
+
         this.sensor = new SensorConnection(
             (matrix) => {
                 this.sensorMatrix = matrix;
+                const p = m4.transformVector(matrix, [2, 0, 0, 1]);
+                this.renderer.sphereTarget = [p[0], p[1], p[2]];
             },
             (status) => {
                 const el = document.getElementById('sensorStatus');
                 if (el) el.textContent = status;
+                if (connectBtn) {
+                    connectBtn.textContent = (status === 'connected') ? 'Disconnect' : 'Connect';
+                }
             }
         );
-
-        const connectBtn = document.getElementById('sensorConnectBtn');
-        const hostInput  = document.getElementById('sensorHost');
-        const portInput  = document.getElementById('sensorPort');
 
         if (connectBtn) {
             connectBtn.addEventListener('click', () => {
                 if (this.sensor.isConnected()) {
                     this.sensor.disconnect();
                     this.sensorMatrix = null;
-                    connectBtn.textContent = 'Connect';
                 } else {
                     const host = hostInput ? hostInput.value.trim() : '192.168.0.101';
                     const port = portInput ? parseInt(portInput.value) : 8080;
                     this.sensor.connect(host, port);
-                    connectBtn.textContent = 'Disconnect';
                 }
             });
         }
@@ -236,13 +303,14 @@ class Application {
             const slider = document.getElementById(id);
             const display = document.getElementById(valId);
             if (!slider) return;
-            slider.addEventListener('input', () => {
+            const apply = () => {
                 const raw = parseFloat(slider.value);
                 const val = transform(raw);
                 if (display) display.textContent = format(raw);
                 setter(val);
-                this.draw();
-            });
+            };
+            slider.addEventListener('input', () => { apply(); this.draw(); });
+            apply();
         };
 
         bind('eyeSeparationSlider', 'eyeSeparationValue',
@@ -262,6 +330,43 @@ class Application {
             v => v,
             v => { if (this.renderer.stereoCamera) this.renderer.stereoCamera.nearClippingDistance = v; }
         );
+    }
+
+    async setupAudio() {
+        const file = 'data/Пиріг_і_Батіг_-_Гаї_шумлять.mp3';
+        await this.audio.load(file);
+
+        const label = document.getElementById('audioFileName');
+        if (label) label.textContent = file.split('/').pop();
+
+        const playBtn = document.getElementById('audioPlayBtn');
+        const restartBtn = document.getElementById('audioRestartBtn');
+
+        const syncPlayBtn = () => {
+            if (playBtn) playBtn.textContent = this.audio.isPlaying ? 'Pause' : 'Play';
+        };
+
+        if (playBtn) {
+            playBtn.addEventListener('click', async () => {
+                if (this.audio.isPlaying) await this.audio.pause();
+                else await this.audio.play();
+                syncPlayBtn();
+            });
+        }
+
+        if (restartBtn) {
+            restartBtn.addEventListener('click', async () => {
+                await this.audio.restart();
+                syncPlayBtn();
+            });
+        }
+
+        const filterCheckbox = document.getElementById('filterEnabled');
+        if (filterCheckbox) {
+            filterCheckbox.addEventListener('change', () => {
+                this.audio.setFilterEnabled(filterCheckbox.checked);
+            });
+        }
     }
 
     /**
@@ -289,6 +394,7 @@ class Application {
             this.setupModelPositionControls();
             this.setupWebcam();
             this.setupSensor();
+            await this.setupAudio();
 
             // Start rendering
             this.startAnimation();

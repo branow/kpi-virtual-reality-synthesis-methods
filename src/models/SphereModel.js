@@ -82,4 +82,11 @@ class SphereModel extends BaseModel {
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
         this.gl.drawElements(this.gl.TRIANGLES, this.count, this.gl.UNSIGNED_SHORT, 0);
     }
+
+    drawStereo(shaderProgram) {
+        this.bindAttribute(shaderProgram.iAttribVertex, this.vertexBuffer, 3);
+
+        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+        this.gl.drawElements(this.gl.TRIANGLES, this.count, this.gl.UNSIGNED_SHORT, 0);
+    }
 }

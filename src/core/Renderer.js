@@ -22,6 +22,9 @@ class Renderer {
         this.webcamQuadVBuffer = null;
         this.webcamQuadTBuffer = null;
         this.webcamQuadIBuffer = null;
+
+        this.spherePos = [2, 0, 0];
+        this.sphereTarget = null;
     }
 
     /**
@@ -393,11 +396,23 @@ class Renderer {
         );
         gl.uniformMatrix4fv(sp.iModelViewMatrix, false, matLeft);
 
+        const [sx, sy, sz] = this.spherePos;
+        const sphere = this.models.get('sphere');
+        const colorSphere = new Float32Array([1, 1, 0, 1]);
+
+        // Left eye (red channel)
         gl.colorMask(true, false, false, true);
         gl.uniform4fv(sp.iColor, colorPolygon);
         surface.drawStereo(sp);
         gl.uniform4fv(sp.iColor, colorEdge);
         surface.drawWireframeStereo(sp);
+
+        const matSphereLeft = m4.multiply(translateToPointZero,
+            m4.multiply(m4.translation(this.stereoCamera.eyeSeparation / 2, 0, 0),
+            m4.multiply(matBase1, m4.translation(sx, sy, sz))));
+        gl.uniformMatrix4fv(sp.iModelViewMatrix, false, matSphereLeft);
+        gl.uniform4fv(sp.iColor, colorSphere);
+        sphere.drawStereo(sp);
 
         // Clear depth between eyes
         gl.clear(gl.DEPTH_BUFFER_BIT);
@@ -417,6 +432,13 @@ class Renderer {
         surface.drawStereo(sp);
         gl.uniform4fv(sp.iColor, colorEdge);
         surface.drawWireframeStereo(sp);
+
+        const matSphereRight = m4.multiply(translateToPointZero,
+            m4.multiply(m4.translation(-this.stereoCamera.eyeSeparation / 2, 0, 0),
+            m4.multiply(matBase1, m4.translation(sx, sy, sz))));
+        gl.uniformMatrix4fv(sp.iModelViewMatrix, false, matSphereRight);
+        gl.uniform4fv(sp.iColor, colorSphere);
+        sphere.drawStereo(sp);
 
         gl.disable(gl.POLYGON_OFFSET_FILL);
         gl.colorMask(true, true, true, true);
