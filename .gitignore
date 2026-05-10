@@ -1,12 +1,14 @@
 *
 !LICENSE
 !README.md
-!index.html
 !.gitignore
+!index.html
 
-!Utils/
-!Utils/**
 !src/
 !src/**
 !textures/
 !textures/**
+!markers/
+!markers/**
+!demo/
+!demo/**
